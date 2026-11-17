@@ -11,10 +11,10 @@ zips the output and uploads it. The server stops the backend app pool, replaces 
 and starts the pool again (`scripts/deploy.bat`, uses `appcmd` and `robocopy`).
 
 ## Server installation (Windows 11 / Windows Server)
-1. Install Node.js.
-2. Run `scripts\install-server.bat [targetDir]` (default `C:\inetpub\devops-tools`).
-3. Start with `node server\server.js` (`PORT` env var, default 3000), and expose through IIS
-   (iisnode or a reverse proxy site) under `/devops-tools`.
+1. Install the .NET 8 SDK.
+2. Run `scripts\install-server.bat [targetDir]` (default `C:\inetpub\devops-tools`). This publishes the ASP.NET Core app and copies the IIS deployment script.
+3. Configure IIS with the ASP.NET Core Hosting Bundle to host `server\DevOpsTools.dll` under `/devops-tools`.
+   The application can also run directly with `dotnet server\DevOpsTools.dll`; set `ASPNETCORE_URLS` as needed.
 
 ## Creating a project
 `POST /devops-tools/api/projects` with JSON:
@@ -31,5 +31,9 @@ Download the `.bat` from `installUrl` into the project root and run it (needs Po
 included in Windows 10/11 and Server 2019+). Each app's files are expected in `<clientOutputPath>\<app name>`.
 
 ## Development
-`npm test` runs the tests. After finishing changes run `scripts\update-install-files.bat` to refresh
-the committed `install\` package; local installed copies are never committed.
+Build with `dotnet build server\DevOpsTools\DevOpsTools.csproj`. Set `DEVOPS_DATA_DIR` to choose a
+persistent project-data directory. The deploy script uses IIS `appcmd` and `robocopy`; configure
+`DEVOPS_DEPLOY_SCRIPT` if it is not at `scripts\deploy.bat` relative to the application working directory.
+
+After finishing changes run `scripts\update-install-files.bat` to refresh the committed `install\`
+package; local installed copies and build artifacts are never committed.

@@ -1,8 +1,0 @@
-{
-  "name": "devops-tools",
-  "version": "0.1.0",
-  "description": "DevOps tooling to deploy IIS web applications from a client machine",
-  "main": "server/server.js",
-  "scripts": { "start": "node server/server.js", "test": "node --test test/server.test.js" },
-  "license": "MIT"
-}

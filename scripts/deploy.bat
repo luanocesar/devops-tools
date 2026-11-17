@@ -1,13 +1,13 @@
 @echo off
-rem Usage: deploy.bat <package.zip> <siteName> <backendAppPool|-> <appsJson>
+rem Usage: deploy.bat <package.zip>
 rem Stops the backend (.NET) app pool, replaces application files, starts it again.
 setlocal
 set ZIP=%~1
-set SITE=%~2
-set POOL=%~3
-set APPS=%~4
+set POOL=%DEVOPS_BACKEND_APP_POOL%
+set APPS=%DEVOPS_APPS%
 set APPCMD=%windir%\system32\inetsrv\appcmd.exe
 set STAGE=%TEMP%\devops-stage-%RANDOM%
+set DEVOPS_ZIP=%ZIP%
 
 powershell -NoProfile -Command "Expand-Archive -LiteralPath $env:ZIP -DestinationPath $env:STAGE -Force"
 if errorlevel 1 exit /b 1
