@@ -1,0 +1,4 @@
+data/
+installed/
+**/bin/
+**/obj/
