@@ -11,9 +11,9 @@ zips the output and uploads it. The server stops the backend app pool, replaces 
 and starts the pool again (`scripts/deploy.bat`, uses `appcmd` and `robocopy`).
 
 ## Server installation (Windows 11 / Windows Server)
-1. Install the .NET 8 SDK.
+1. Install the .NET 8 SDK to publish the app.
 2. Run `scripts\install-server.bat [targetDir]` (default `C:\inetpub\devops-tools`). This publishes the ASP.NET Core app and copies the IIS deployment script.
-3. Configure IIS with the ASP.NET Core Hosting Bundle to host `server\DevOpsTools.dll` under `/devops-tools`.
+3. Install the .NET 8 Hosting Bundle and configure IIS to host `server\DevOpsTools.dll` under `/devops-tools`.
    The application can also run directly with `dotnet server\DevOpsTools.dll`; set `ASPNETCORE_URLS` as needed.
 
 ## Creating a project

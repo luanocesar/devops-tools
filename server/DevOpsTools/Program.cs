@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Http.Features;
 
 const string BasePath = "/devops-tools";
 const long MaxUploadBytes = 500L * 1024 * 1024;
@@ -17,13 +18,14 @@ var app = builder.Build();
 
 app.MapPost($"{BasePath}/api/projects", async (HttpRequest request) =>
 {
+    SetRequestBodyLimit(request.HttpContext, MaxProjectRequestBytes);
     if (request.ContentLength > MaxProjectRequestBytes)
         return Results.Json(new { error = "request too large" }, statusCode: StatusCodes.Status413PayloadTooLarge);
 
     ProjectRequest? input;
     try
     {
-        input = await JsonSerializer.DeserializeAsync<ProjectRequest>(request.Body);
+        input = await JsonSerializer.DeserializeAsync<ProjectRequest>(request.Body, AppJson.Options);
     }
     catch (JsonException)
     {
@@ -76,6 +78,7 @@ app.MapGet($"{BasePath}/install-client", async (HttpRequest request, string? pro
 
 app.MapPost($"{BasePath}/api/projects/{{name}}/deploy", async (HttpContext context, string name) =>
 {
+    SetRequestBodyLimit(context, MaxUploadBytes);
     var config = await LoadProjectAsync(projectsDirectory, name);
     if (config is null || !TokenMatches(context.Request.Headers["X-Devops-Token"].FirstOrDefault(), config.Token))
         return Results.Unauthorized();
@@ -119,6 +122,13 @@ app.MapPost($"{BasePath}/api/projects/{{name}}/deploy", async (HttpContext conte
 });
 
 app.Run();
+
+static void SetRequestBodyLimit(HttpContext context, long limit)
+{
+    var feature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
+    if (feature is { IsReadOnly: false })
+        feature.MaxRequestBodySize = limit;
+}
 
 static async Task<ProjectConfig?> LoadProjectAsync(string projectsDirectory, string? name)
 {
@@ -176,6 +186,11 @@ static async Task<string> RunDeployAsync(ProjectConfig project, string zipPath)
         throw new PlatformNotSupportedException("IIS deployment requires Windows.");
 
     var script = Environment.GetEnvironmentVariable("DEVOPS_DEPLOY_SCRIPT")
+        ?? new[]
+        {
+            Path.Combine(Directory.GetCurrentDirectory(), "scripts", "deploy.bat"),
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "scripts", "deploy.bat"))
+        }.FirstOrDefault(File.Exists)
         ?? Path.Combine(Directory.GetCurrentDirectory(), "scripts", "deploy.bat");
     var startInfo = new ProcessStartInfo("cmd.exe")
     {
